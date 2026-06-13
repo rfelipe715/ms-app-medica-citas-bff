@@ -1,10 +1,9 @@
 package cl.duoc.ms_citas_bbf.client;
 
 import cl.duoc.ms_citas_bbf.model.dto.CitaDTO;
+import cl.duoc.ms_citas_bbf.model.dto.CitaUpdateDTO;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -16,4 +15,10 @@ public interface CitasBsRestClient {
 
     @GetMapping
     List<CitaDTO> listarCitas();
+
+    @DeleteMapping
+    public void eliminarCita(Long id);
+
+    @PutMapping
+    public CitaUpdateDTO actualizarCita(@RequestBody CitaUpdateDTO cita);
 }

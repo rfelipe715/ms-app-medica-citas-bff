@@ -2,8 +2,10 @@ package cl.duoc.ms_citas_bbf.controller;
 
 import cl.duoc.ms_citas_bbf.client.CitasBsRestClient;
 import cl.duoc.ms_citas_bbf.model.dto.CitaDTO;
+import cl.duoc.ms_citas_bbf.model.dto.CitaUpdateDTO;
 import cl.duoc.ms_citas_bbf.service.CitasService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,5 +25,18 @@ public class CitasController {
     @GetMapping("/listar")
     public List<CitaDTO> listarCitas() {
         return citasService.listarCitas();
+    }
+
+    @DeleteMapping("/eliminar/{id}")
+    public ResponseEntity<String> eliminarCita (@RequestParam Long id) {
+
+        citasService.eliminarCita(id);
+
+        return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/actualizar")
+    public ResponseEntity<CitaUpdateDTO> actualizarCita (@RequestBody CitaUpdateDTO cita) {
+        return ResponseEntity.ok(citasService.actualizarCita(cita));
     }
 }
