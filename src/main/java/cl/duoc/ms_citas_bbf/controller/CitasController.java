@@ -6,6 +6,7 @@ import cl.duoc.ms_citas_bbf.model.dto.CitaUpdateDTO;
 import cl.duoc.ms_citas_bbf.model.dto.CitaConPacienteDTO;
 import cl.duoc.ms_citas_bbf.service.CitasService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,39 +20,65 @@ public class CitasController {
     private CitasService citasService;
 
     @PostMapping("/agendar")
-    public CitaDTO agendarCita(@RequestBody CitaDTO citaDTO) {
-        return citasService.registrarCita(citaDTO);
+    public ResponseEntity<CitaDTO> agendarCita(@RequestBody CitaDTO citaDTO) {
+        try {
+            CitaDTO cita = citasService.registrarCita(citaDTO);
+            return new ResponseEntity<>(cita, HttpStatus.CREATED);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     @GetMapping("/listar")
-    public List<CitaDTO> listarCitas() {
-        return citasService.listarCitas();
+    public ResponseEntity<List<CitaDTO>> listarCitas() {
+        try {
+            List<CitaDTO> citas = citasService.listarCitas();
+            return ResponseEntity.ok(citas);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
     @GetMapping("/listar/con-pacientes")
-    public List<CitaConPacienteDTO> listarCitasConPacientes() {
-        return citasService.listarCitasConPacientes();
+    public ResponseEntity<List<CitaConPacienteDTO>> listarCitasConPacientes() {
+        try {
+            List<CitaConPacienteDTO> citas = citasService.listarCitasConPacientes();
+            return ResponseEntity.ok(citas);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
     @GetMapping("/{id}/con-paciente")
     public ResponseEntity<CitaConPacienteDTO> obtenerCitaConPaciente(@PathVariable Long id) {
-        CitaConPacienteDTO cita = citasService.obtenerCitaConPaciente(id);
-        if (cita != null) {
-            return ResponseEntity.ok(cita);
+        try {
+            CitaConPacienteDTO cita = citasService.obtenerCitaConPaciente(id);
+            if (cita != null) {
+                return ResponseEntity.ok(cita);
+            }
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
         }
-        return ResponseEntity.notFound().build();
     }
 
     @DeleteMapping("/eliminar/{id}")
-    public ResponseEntity<String> eliminarCita (@RequestParam Long id) {
-
-        citasService.eliminarCita(id);
-
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<Void> eliminarCita(@PathVariable Long id) {
+        try {
+            citasService.eliminarCita(id);
+            return ResponseEntity.noContent().build();
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @PutMapping("/actualizar")
-    public ResponseEntity<CitaUpdateDTO> actualizarCita (@RequestBody CitaUpdateDTO cita) {
-        return ResponseEntity.ok(citasService.actualizarCita(cita));
+    public ResponseEntity<CitaUpdateDTO> actualizarCita(@RequestBody CitaUpdateDTO cita) {
+        try {
+            CitaUpdateDTO citaActualizada = citasService.actualizarCita(cita);
+            return ResponseEntity.ok(citaActualizada);
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 }
