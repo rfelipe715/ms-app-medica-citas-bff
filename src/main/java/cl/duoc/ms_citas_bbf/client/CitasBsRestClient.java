@@ -16,9 +16,12 @@ public interface CitasBsRestClient {
     @GetMapping
     List<CitaDTO> listarCitas();
 
-    @DeleteMapping
-    public void eliminarCita(Long id);
+    @GetMapping("/{id}")
+    CitaDTO obtenerCitaPorId(@PathVariable("id") Long id);
+
+    @DeleteMapping("/{id}")
+    void eliminarCita(@PathVariable("id") Long id);
 
     @PutMapping
-    public CitaUpdateDTO actualizarCita(@RequestBody CitaUpdateDTO cita);
+    CitaUpdateDTO actualizarCita(@RequestBody CitaUpdateDTO cita);
 }

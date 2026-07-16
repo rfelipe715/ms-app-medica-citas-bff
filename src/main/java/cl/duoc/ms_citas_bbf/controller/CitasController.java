@@ -1,6 +1,5 @@
 package cl.duoc.ms_citas_bbf.controller;
 
-import cl.duoc.ms_citas_bbf.client.CitasBsRestClient;
 import cl.duoc.ms_citas_bbf.model.dto.CitaDTO;
 import cl.duoc.ms_citas_bbf.model.dto.CitaUpdateDTO;
 import cl.duoc.ms_citas_bbf.model.dto.CitaConPacienteDTO;
@@ -14,6 +13,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import io.swagger.v3.oas.annotations.servers.Server;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -38,37 +38,36 @@ public class CitasController {
             @ApiResponse(responseCode = "400", description = "Datos inválidos en la solicitud")
     })
     @PostMapping("/agendar")
-    public ResponseEntity<CitaDTO> agendarCita(@RequestBody CitaDTO citaDTO) {
-        try {
-            CitaDTO cita = citasService.registrarCita(citaDTO);
-            return new ResponseEntity<>(cita, HttpStatus.CREATED);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
-        }
+    public ResponseEntity<CitaDTO> agendarCita(@Valid @RequestBody CitaDTO citaDTO) {
+        CitaDTO cita = citasService.registrarCita(citaDTO);
+        return new ResponseEntity<>(cita, HttpStatus.CREATED);
     }
 
     @Operation(summary = "Listar todas las citas", description = "Retorna la lista completa de citas registradas en el sistema.")
     @ApiResponse(responseCode = "200", description = "Lista de citas obtenida exitosamente")
     @GetMapping("/listar")
     public ResponseEntity<List<CitaDTO>> listarCitas() {
-        try {
-            List<CitaDTO> citas = citasService.listarCitas();
-            return ResponseEntity.ok(citas);
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().build();
-        }
+        List<CitaDTO> citas = citasService.listarCitas();
+        return ResponseEntity.ok(citas);
+    }
+
+    @Operation(summary = "Buscar cita por ID", description = "Retorna los datos de una cita específica según su identificador único.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Cita encontrada"),
+            @ApiResponse(responseCode = "404", description = "No existe una cita con el ID indicado")
+    })
+    @GetMapping("/{id}")
+    public ResponseEntity<CitaDTO> obtenerCitaPorId(@PathVariable Long id) {
+        CitaDTO cita = citasService.obtenerCitaPorId(id);
+        return ResponseEntity.ok(cita);
     }
 
     @Operation(summary = "Listar citas con datos de paciente", description = "Retorna las citas enriquecidas con los datos del paciente asociado a cada una.")
     @ApiResponse(responseCode = "200", description = "Lista de citas con paciente obtenida exitosamente")
     @GetMapping("/listar/con-pacientes")
     public ResponseEntity<List<CitaConPacienteDTO>> listarCitasConPacientes() {
-        try {
-            List<CitaConPacienteDTO> citas = citasService.listarCitasConPacientes();
-            return ResponseEntity.ok(citas);
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().build();
-        }
+        List<CitaConPacienteDTO> citas = citasService.listarCitasConPacientes();
+        return ResponseEntity.ok(citas);
     }
 
     @Operation(summary = "Buscar cita con datos de paciente", description = "Retorna una cita específica enriquecida con los datos del paciente asociado.")
@@ -78,15 +77,11 @@ public class CitasController {
     })
     @GetMapping("/{id}/con-paciente")
     public ResponseEntity<CitaConPacienteDTO> obtenerCitaConPaciente(@PathVariable Long id) {
-        try {
-            CitaConPacienteDTO cita = citasService.obtenerCitaConPaciente(id);
-            if (cita != null) {
-                return ResponseEntity.ok(cita);
-            }
-            return ResponseEntity.notFound().build();
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().build();
+        CitaConPacienteDTO cita = citasService.obtenerCitaConPaciente(id);
+        if (cita != null) {
+            return ResponseEntity.ok(cita);
         }
+        return ResponseEntity.notFound().build();
     }
 
     @Operation(summary = "Eliminar una cita", description = "Elimina de forma permanente una cita del sistema, identificada por su ID.")
@@ -96,12 +91,8 @@ public class CitasController {
     })
     @DeleteMapping("/eliminar/{id}")
     public ResponseEntity<Void> eliminarCita(@PathVariable Long id) {
-        try {
-            citasService.eliminarCita(id);
-            return ResponseEntity.noContent().build();
-        } catch (Exception e) {
-            return ResponseEntity.notFound().build();
-        }
+        citasService.eliminarCita(id);
+        return ResponseEntity.noContent().build();
     }
 
     @Operation(summary = "Actualizar una cita existente", description = "Actualiza los datos de una cita ya registrada.")
@@ -110,12 +101,8 @@ public class CitasController {
             @ApiResponse(responseCode = "404", description = "No existe una cita con el ID indicado")
     })
     @PutMapping("/actualizar")
-    public ResponseEntity<CitaUpdateDTO> actualizarCita(@RequestBody CitaUpdateDTO cita) {
-        try {
-            CitaUpdateDTO citaActualizada = citasService.actualizarCita(cita);
-            return ResponseEntity.ok(citaActualizada);
-        } catch (Exception e) {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<CitaUpdateDTO> actualizarCita(@Valid @RequestBody CitaUpdateDTO cita) {
+        CitaUpdateDTO citaActualizada = citasService.actualizarCita(cita);
+        return ResponseEntity.ok(citaActualizada);
     }
 }

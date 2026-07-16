@@ -2,9 +2,12 @@ package cl.duoc.ms_citas_bbf.service;
 
 import cl.duoc.ms_citas_bbf.client.CitasBsRestClient;
 import cl.duoc.ms_citas_bbf.client.PacientesBffRestClient;
+import cl.duoc.ms_citas_bbf.exception.CitaNotFoundException;
+import cl.duoc.ms_citas_bbf.exception.ServicioNoDisponibleException;
 import cl.duoc.ms_citas_bbf.model.dto.CitaDTO;
 import cl.duoc.ms_citas_bbf.model.dto.CitaUpdateDTO;
 import cl.duoc.ms_citas_bbf.model.dto.CitaConPacienteDTO;
+import feign.FeignException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -24,6 +27,16 @@ public class CitasService {
         return citasBsRestClient.listarCitas();
     }
 
+    public CitaDTO obtenerCitaPorId(Long id) {
+        try {
+            return citasBsRestClient.obtenerCitaPorId(id);
+        } catch (FeignException.NotFound e) {
+            throw new CitaNotFoundException(id);
+        } catch (FeignException e) {
+            throw new ServicioNoDisponibleException("ms-citas-bs", e);
+        }
+    }
+
     public List<CitaConPacienteDTO> listarCitasConPacientes() {
         return citasBsRestClient.listarCitas().stream()
             .map(this::enriquecerCita)
@@ -31,15 +44,31 @@ public class CitasService {
     }
 
     public CitaDTO registrarCita(CitaDTO citaDTO) {
-        return citasBsRestClient.registrarCita(citaDTO);
+        try {
+            return citasBsRestClient.registrarCita(citaDTO);
+        } catch (FeignException e) {
+            throw new ServicioNoDisponibleException("ms-citas-bs", e);
+        }
     }
 
     public void eliminarCita (Long id) {
-        citasBsRestClient.eliminarCita(id);
+        try {
+            citasBsRestClient.eliminarCita(id);
+        } catch (FeignException.NotFound e) {
+            throw new CitaNotFoundException(id);
+        } catch (FeignException e) {
+            throw new ServicioNoDisponibleException("ms-citas-bs", e);
+        }
     }
 
     public CitaUpdateDTO actualizarCita (CitaUpdateDTO cita) {
-        return citasBsRestClient.actualizarCita(cita);
+        try {
+            return citasBsRestClient.actualizarCita(cita);
+        } catch (FeignException.NotFound e) {
+            throw new CitaNotFoundException(cita.getId());
+        } catch (FeignException e) {
+            throw new ServicioNoDisponibleException("ms-citas-bs", e);
+        }
     }
 
     public CitaConPacienteDTO obtenerCitaConPaciente(Long id) {
