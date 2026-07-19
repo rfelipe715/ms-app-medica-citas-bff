@@ -8,6 +8,8 @@ import cl.duoc.ms_citas_bbf.model.dto.CitaDTO;
 import cl.duoc.ms_citas_bbf.model.dto.CitaUpdateDTO;
 import cl.duoc.ms_citas_bbf.model.dto.CitaConPacienteDTO;
 import feign.FeignException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +18,8 @@ import java.util.stream.Collectors;
 
 @Service
 public class CitasService {
+
+    private static final Logger log = LoggerFactory.getLogger(CitasService.class);
 
     @Autowired
     private CitasBsRestClient citasBsRestClient;
@@ -31,8 +35,10 @@ public class CitasService {
         try {
             return citasBsRestClient.obtenerCitaPorId(id);
         } catch (FeignException.NotFound e) {
+            log.warn("Cita id={} no encontrada en ms-citas-bs", id);
             throw new CitaNotFoundException(id);
         } catch (FeignException e) {
+            log.error("ms-citas-bs no disponible al buscar cita id={}: {}", id, e.getMessage());
             throw new ServicioNoDisponibleException("ms-citas-bs", e);
         }
     }
@@ -45,8 +51,11 @@ public class CitasService {
 
     public CitaDTO registrarCita(CitaDTO citaDTO) {
         try {
-            return citasBsRestClient.registrarCita(citaDTO);
+            CitaDTO registrada = citasBsRestClient.registrarCita(citaDTO);
+            log.info("Cita registrada con id={}, pacienteId={}", registrada.getId(), registrada.getPacienteId());
+            return registrada;
         } catch (FeignException e) {
+            log.error("ms-citas-bs no disponible al registrar cita para pacienteId={}: {}", citaDTO.getPacienteId(), e.getMessage());
             throw new ServicioNoDisponibleException("ms-citas-bs", e);
         }
     }
@@ -54,19 +63,26 @@ public class CitasService {
     public void eliminarCita (Long id) {
         try {
             citasBsRestClient.eliminarCita(id);
+            log.info("Cita id={} eliminada correctamente", id);
         } catch (FeignException.NotFound e) {
+            log.warn("Intento de eliminar una cita inexistente, id={}", id);
             throw new CitaNotFoundException(id);
         } catch (FeignException e) {
+            log.error("ms-citas-bs no disponible al eliminar cita id={}: {}", id, e.getMessage());
             throw new ServicioNoDisponibleException("ms-citas-bs", e);
         }
     }
 
     public CitaUpdateDTO actualizarCita (CitaUpdateDTO cita) {
         try {
-            return citasBsRestClient.actualizarCita(cita);
+            CitaUpdateDTO actualizada = citasBsRestClient.actualizarCita(cita);
+            log.info("Cita id={} actualizada correctamente", cita.getId());
+            return actualizada;
         } catch (FeignException.NotFound e) {
+            log.warn("Intento de actualizar una cita inexistente, id={}", cita.getId());
             throw new CitaNotFoundException(cita.getId());
         } catch (FeignException e) {
+            log.error("ms-citas-bs no disponible al actualizar cita id={}: {}", cita.getId(), e.getMessage());
             throw new ServicioNoDisponibleException("ms-citas-bs", e);
         }
     }
@@ -94,7 +110,8 @@ public class CitasService {
         try {
             conPaciente.setPaciente(pacientesBffRestClient.obtenerPaciente(citaDTO.getPacienteId()));
         } catch (Exception e) {
-            // Silenciar error si no encuentra paciente
+            log.warn("No se pudo enriquecer la cita id={} con datos del paciente id={}: {}",
+                    citaDTO.getId(), citaDTO.getPacienteId(), e.getMessage());
         }
         
         return conPaciente;
